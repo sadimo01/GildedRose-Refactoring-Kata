@@ -1,62 +1,77 @@
 package com.gildedrose;
 
 class GildedRose {
-    Item[] items;
+	Item[] items;
 
-    public GildedRose(Item[] items) {
-        this.items = items;
-    }
+	private enum PRODUCT {
+		SULFURAS, BACKSTAGE, AGED, CONJURED, NORMAL
+	}
 
-    public void updateQuality() {
-        for (int i = 0; i < items.length; i++) {
-            if (!items[i].name.equals("Aged Brie")
-                    && !items[i].name.equals("Backstage passes to a TAFKAL80ETC concert")) {
-                if (items[i].quality > 0) {
-                    if (!items[i].name.equals("Sulfuras, Hand of Ragnaros")) {
-                        items[i].quality = items[i].quality - 1;
-                    }
-                }
-            } else {
-                if (items[i].quality < 50) {
-                    items[i].quality = items[i].quality + 1;
+	public GildedRose(Item[] items) {
+		this.items = items;
+	}
 
-                    if (items[i].name.equals("Backstage passes to a TAFKAL80ETC concert")) {
-                        if (items[i].sellIn < 11) {
-                            if (items[i].quality < 50) {
-                                items[i].quality = items[i].quality + 1;
-                            }
-                        }
+	public void updateQuality() {
+		for (Item item : items) {
+			switch (productByName(item)) {
+				case SULFURAS:
+					continue;
+				case BACKSTAGE:
+					increaseQuality(item, 1);
+					if (item.sellIn < 11)
+						increaseQuality(item, 1);
+					if (item.sellIn < 6)
+						increaseQuality(item, 1);
+					item.sellIn--;
+					if (item.sellIn < 0)
+						item.quality = 0;
 
-                        if (items[i].sellIn < 6) {
-                            if (items[i].quality < 50) {
-                                items[i].quality = items[i].quality + 1;
-                            }
-                        }
-                    }
-                }
-            }
+					break;
+				case AGED:
+					increaseQuality(item, 1);
+					item.sellIn--;
+					if (item.sellIn < 0)
+						increaseQuality(item, 1);
+					break;
+				case CONJURED:
+					decreaseQuality(item, 2);
+					item.sellIn--;
+					if (item.sellIn < 0)
+						decreaseQuality(item, 2);
+					break;
 
-            if (!items[i].name.equals("Sulfuras, Hand of Ragnaros")) {
-                items[i].sellIn = items[i].sellIn - 1;
-            }
+				case NORMAL:
+					decreaseQuality(item, 1);
+					item.sellIn--;
+					if (item.sellIn < 0)
+						decreaseQuality(item, 1);
+					break;
+			}
+		}
 
-            if (items[i].sellIn < 0) {
-                if (!items[i].name.equals("Aged Brie")) {
-                    if (!items[i].name.equals("Backstage passes to a TAFKAL80ETC concert")) {
-                        if (items[i].quality > 0) {
-                            if (!items[i].name.equals("Sulfuras, Hand of Ragnaros")) {
-                                items[i].quality = items[i].quality - 1;
-                            }
-                        }
-                    } else {
-                        items[i].quality = items[i].quality - items[i].quality;
-                    }
-                } else {
-                    if (items[i].quality < 50) {
-                        items[i].quality = items[i].quality + 1;
-                    }
-                }
-            }
-        }
-    }
+	}
+
+	private PRODUCT productByName(Item item) {
+		switch (item.name) {
+			case "Sulfuras, Hand of Ragnaros":
+				return PRODUCT.SULFURAS;
+			case "Backstage passes to a TAFKAL80ETC concert":
+				return PRODUCT.BACKSTAGE;
+			case "Aged Brie":
+				return PRODUCT.AGED;
+			default:
+				if (item.name.startsWith("Conjured")) {
+					return PRODUCT.CONJURED;
+				}
+				return PRODUCT.NORMAL;
+		}
+	}
+
+	private static void increaseQuality(Item item, int n) {
+		item.quality = Math.min(50, item.quality + n);
+	}
+
+	private static void decreaseQuality(Item item, int n) {
+		item.quality = Math.max(0, item.quality - n);
+	}
 }
